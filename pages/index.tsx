@@ -8,9 +8,13 @@ import { realData } from "../constants/dataContants";
 
 export default function Home() {
   const router = useRouter();
-  const [items, setItems] = useState(realData?.data);
-  const [loading, setLoading] = useState(false);
   const page = Number(router.query.page || 1);
+  const [items, setItems] = useState(realData?.data);
+  if(typeof window !== "undefined" && page === 1){
+    localStorage.setItem("data", JSON.stringify(realData?.data.pokemons || []));
+  }
+  const [loading, setLoading] = useState(false);
+  
 
   const client = new ApolloClient({
     uri: "https://graphql-pokemon2.vercel.app/",
