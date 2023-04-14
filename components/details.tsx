@@ -136,7 +136,7 @@ export default function Details() {
           </section>
         </div>
       ) : (
-        <div>No Pokemon found</div>
+        <div>PAGE NOT FOUND !!</div>
       )}
       {isOpen && <PokemonEvolution setOpen={setIsOpen} isOpen={isOpen}/>}
     </>

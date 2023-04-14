@@ -1,4 +1,3 @@
-
 import { useQuery, gql } from "@apollo/client";
 import { useRouter } from "next/router";
 import { useCallback, useEffect, useState } from "react";
@@ -7,7 +6,7 @@ import EvolutionModal from "./evolutionModal";
 
 const PokemonEvolution = (props: any) => {
   const [items, setItems] = useState([]);
-  const [loading, SetLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const client = new ApolloClient({
     uri: "https://graphql-pokemon2.vercel.app/",
     cache: new InMemoryCache(),
@@ -41,22 +40,27 @@ const PokemonEvolution = (props: any) => {
     }
   `;
   const getData = async () => {
-    const res: any = await client.query({
-      query: Evol_Query,
-      variables: {
-        name: pokeName,
-      },
-    });
-    const { data, loading } = res;
-    if (!loading) {
-      setItems(data);
-      SetLoading(false);
+    setLoading(true);
+    try {
+      const res: any = await client.query({
+        query: Evol_Query,
+        variables: {
+          name: pokeName,
+        },
+      });
+      const { data, loading } = res;
+      if (!loading) {
+        setItems(data);
+        setLoading(false);
+      }
+    } catch (error) {
+      console.log(error);
+      setLoading(false);
     }
   };
   useEffect(() => {
     getData();
-  }, []);
-
+  }, [pokeName, Evol_Query]);
 
   const { setOpen, isOpen } = props;
   const closeHandler = () => {
@@ -65,7 +69,11 @@ const PokemonEvolution = (props: any) => {
 
   return (
     <>
-      {!loading && <EvolutionModal closeHandler={closeHandler} data={items} />}
+      <EvolutionModal
+        closeHandler={closeHandler}
+        data={items}
+        loading={loading}
+      />
     </>
   );
 };

@@ -1,19 +1,25 @@
-
-
-import { useQuery, gql } from "@apollo/client";
+import { gql } from "@apollo/client";
+import { ApolloClient, InMemoryCache } from "@apollo/client";
 import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
-import { useDispatch } from "react-redux";
-import { PokemonActions } from "../store/pokemonSlice";
 import HomePage from "../components/homepage";
 import Card from "@/components/shared/Cardpokemon";
+import { realData } from "../constants/dataContants";
 
 export default function Home() {
   const router = useRouter();
+  const [items, setItems] = useState(realData?.data);
+  const [loading, setLoading] = useState(false);
   const page = Number(router.query.page || 1);
+
+  const client = new ApolloClient({
+    uri: "https://graphql-pokemon2.vercel.app/",
+    cache: new InMemoryCache(),
+  });
+
   const POKEMON_QUERY = gql`
 {
-    pokemons(first:${page > 3 ? page * 10 : 30}){
+    pokemons(first:${page > 1 ? page * 20 : 20}){
       id
       number
       name
@@ -36,20 +42,36 @@ export default function Home() {
     }
 }
 `;
-  const { data, loading, error } = useQuery(POKEMON_QUERY);
-  const dispatch = useDispatch();
+
+  const getData = async () => {
+    if (page > 1) {
+      setLoading(true);
+      try {
+        const response = await client.query({
+          query: POKEMON_QUERY,
+        });
+        const { data, loading } = response;
+        localStorage.setItem("data", JSON.stringify(data.pokemons || []));
+        setItems(data);
+        if (data?.pokemons.length) {
+          setLoading(false);
+        }
+      } catch (error) {
+        console.log(error);
+        setLoading(false);
+      }
+    }
+  };
 
   useEffect(() => {
-    {
-      !loading &&
-        localStorage.setItem("data", JSON.stringify(data?.pokemons || []));
-    }
-    dispatch(PokemonActions.AddPokemons(data?.pokemons));
-  }, [page, data, loading]);
+    getData();
+  }, [page]);
 
   return (
     <>
-      <Card>{!loading && <HomePage data={data} />}</Card>
+      <Card>
+        <HomePage data={items} loading={loading} />
+      </Card>
     </>
   );
 }
